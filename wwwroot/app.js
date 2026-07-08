@@ -1,5 +1,4 @@
-﻿const userId = "demo-user";
-
+﻿
 
 const state = {
 
@@ -12,7 +11,9 @@ const state = {
         total: 0
     },
 
-    orders: []
+    orders: [],
+
+    currentUser: null
 
 };
 
@@ -54,7 +55,69 @@ const elements = {
         document.getElementById("overlay"),
 
     notification:
-        document.getElementById("notification")
+        document.getElementById("notification"),
+
+        // Authentication navigation
+    guestAuthActions:
+        document.getElementById("guestAuthActions"),
+
+    userAuthActions:
+        document.getElementById("userAuthActions"),
+
+    currentUserEmail:
+        document.getElementById("currentUserEmail"),
+
+    loginNavButton:
+        document.getElementById("loginNavButton"),
+
+    registerNavButton:
+        document.getElementById("registerNavButton"),
+
+    logoutButton:
+        document.getElementById("logoutButton"),
+
+
+    // Authentication dialog
+    authDialog:
+        document.getElementById("authDialog"),
+
+    authDialogTitle:
+        document.getElementById("authDialogTitle"),
+
+    closeAuthButton:
+        document.getElementById("closeAuthButton"),
+
+    loginTabButton:
+        document.getElementById("loginTabButton"),
+
+    registerTabButton:
+        document.getElementById("registerTabButton"),
+
+    authMessage:
+        document.getElementById("authMessage"),
+
+
+    // Authentication forms
+    loginForm:
+        document.getElementById("loginForm"),
+
+    registerForm:
+        document.getElementById("registerForm"),
+
+    loginEmail:
+        document.getElementById("loginEmail"),
+
+    loginPassword:
+        document.getElementById("loginPassword"),
+
+    registerEmail:
+        document.getElementById("registerEmail"),
+
+    registerPassword:
+        document.getElementById("registerPassword"),
+
+    confirmPassword:
+        document.getElementById("confirmPassword"),
 
 };
 
@@ -285,7 +348,7 @@ async function loadCart() {
 
         state.cart =
             await apiRequest(
-                `/api/cart/${userId}`
+                "/api/cart"
             );
 
 
@@ -414,11 +477,24 @@ function renderCart() {
 
 async function addToCart(matId) {
 
+    if (!state.currentUser) {
+
+        openAuthenticationDialog("login");
+
+
+        setAuthenticationMessage(
+            "Please log in before adding items to your cart."
+        );
+
+
+        return;
+    }
+
     try {
 
         state.cart = await apiRequest(
 
-            `/api/cart/${userId}/items`,
+            "/api/cart/items",
 
             {
 
@@ -464,7 +540,7 @@ async function removeFromCart(matId) {
 
         state.cart = await apiRequest(
 
-            `/api/cart/${userId}/items/${matId}`,
+            `/api/cart/items/${matId}`,
 
             {
                 method: "DELETE"
@@ -491,11 +567,24 @@ async function removeFromCart(matId) {
 
 async function checkout() {
 
+    if (!state.currentUser) {
+
+        openAuthenticationDialog("login");
+
+
+        setAuthenticationMessage(
+            "Please log in before checking out."
+        );
+
+
+        return;
+    }
+
     try {
 
         await apiRequest(
 
-            `/api/orders/${userId}`,
+            "/api/orders",
 
             {
                 method: "POST"
@@ -539,7 +628,7 @@ async function loadOrders() {
     try {
 
         state.orders = await apiRequest(
-            `/api/orders/${userId}`
+            "/api/orders"
         );
 
 
@@ -697,7 +786,377 @@ function showNotification(
 
 }
 
+async function loadCurrentUser() {
 
+    try {
+
+        const response = await fetch(
+            "/api/auth/me",
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
+
+
+        if (response.status === 401) {
+
+            state.currentUser = null;
+
+            renderAuthenticationState();
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Unable to check authentication status. Status: ${response.status}`
+            );
+        }
+
+
+        state.currentUser =
+            await response.json();
+
+
+        renderAuthenticationState();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Authentication check failed:",
+            error
+        );
+
+
+        state.currentUser = null;
+
+        renderAuthenticationState();
+
+    }
+
+}
+
+function renderAuthenticationState() {
+
+    const isAuthenticated =
+        state.currentUser !== null;
+
+
+    elements.guestAuthActions.hidden =
+        isAuthenticated;
+
+
+    elements.userAuthActions.hidden =
+        !isAuthenticated;
+
+
+    if (isAuthenticated) {
+
+        elements.currentUserEmail.textContent =
+            state.currentUser.email ?? "Signed In";
+
+    }
+    else {
+
+        elements.currentUserEmail.textContent = "";
+
+    }
+
+}
+
+function setAuthenticationMode(mode) {
+
+    const isLogin =
+        mode === "login";
+
+
+    elements.loginForm.hidden =
+        !isLogin;
+
+
+    elements.registerForm.hidden =
+        isLogin;
+
+
+    elements.loginTabButton.classList.toggle(
+        "active",
+        isLogin
+    );
+
+
+    elements.registerTabButton.classList.toggle(
+        "active",
+        !isLogin
+    );
+
+
+    elements.authDialogTitle.textContent =
+        isLogin
+            ? "Welcome Back"
+            : "Create Your Account";
+
+
+    setAuthenticationMessage("");
+
+}
+
+function openAuthenticationDialog(mode) {
+
+    setAuthenticationMode(mode);
+
+
+    if (!elements.authDialog.open) {
+
+        elements.authDialog.showModal();
+
+    }
+
+}
+
+function closeAuthenticationDialog() {
+
+    if (elements.authDialog.open) {
+
+        elements.authDialog.close();
+
+    }
+
+
+    setAuthenticationMessage("");
+
+}
+
+function setAuthenticationMessage(
+    message,
+    isError = false) {
+
+    elements.authMessage.textContent =
+        message;
+
+
+    elements.authMessage.classList.toggle(
+        "error",
+        isError
+    );
+
+}
+
+async function authenticationRequest(
+    url,
+    options = {}) {
+
+    const response = await fetch(
+        url,
+        {
+            ...options,
+
+            credentials: "include",
+
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            }
+        }
+    );
+
+
+    if (!response.ok) {
+
+        let message =
+            `Authentication request failed with status ${response.status}.`;
+
+
+        const contentType =
+            response.headers.get("content-type") || "";
+
+
+        try {
+
+            if (contentType.includes("application/json")) {
+
+                const data =
+                    await response.json();
+
+
+                if (data.errors) {
+
+                    message = Object.values(data.errors)
+                        .flat()
+                        .join(" ");
+
+                }
+                else {
+
+                    message =
+                        data.detail ||
+                        data.title ||
+                        data.message ||
+                        message;
+
+                }
+
+            }
+            else {
+
+                const text =
+                    await response.text();
+
+
+                if (text) {
+                    message = text;
+                }
+
+            }
+
+        }
+        catch {
+            // Keep the fallback message.
+        }
+
+
+        throw new Error(message);
+
+    }
+
+
+    return response;
+
+}
+
+async function loginUser(
+    email,
+    password,
+    successMessage = "Logged in successfully.") {
+
+    await authenticationRequest(
+        "/api/auth/login?useCookies=true",
+        {
+            method: "POST",
+
+            body: JSON.stringify({
+                email,
+                password
+            })
+        }
+    );
+
+
+    await loadCurrentUser();
+
+    await Promise.all([
+
+        loadCart(),
+
+        loadOrders()
+
+    ]);
+
+    closeAuthenticationDialog();
+
+
+    elements.loginForm.reset();
+
+
+    showNotification(successMessage);
+
+}
+
+async function registerUser(
+    email,
+    password,
+    confirmPassword) {
+
+    if (password !== confirmPassword) {
+
+        throw new Error(
+            "The passwords do not match."
+        );
+
+    }
+
+
+    await authenticationRequest(
+        "/api/auth/register",
+        {
+            method: "POST",
+
+            body: JSON.stringify({
+                email,
+                password
+            })
+        }
+    );
+
+
+    /*
+     * Registration creates the account.
+     *
+     * We then immediately perform cookie login
+     * so the user does not have to manually log
+     * in after registering.
+     */
+
+    await loginUser(
+        email,
+        password,
+        "Account created. You are now signed in."
+    );
+
+
+    elements.registerForm.reset();
+
+}
+
+async function logoutUser() {
+
+    try {
+
+        await authenticationRequest(
+            "/api/auth/logout",
+            {
+                method: "POST"
+            }
+        );
+
+
+        state.currentUser = null;
+
+        state.cart = {
+            items: [],
+            total: 0
+        };
+
+
+        state.orders = [];
+
+
+        renderCart();
+
+        renderOrders();
+
+
+        renderAuthenticationState();
+
+
+        showNotification(
+            "You have been logged out."
+        );
+
+    }
+    catch (error) {
+
+        showNotification(
+            error.message,
+            true
+        );
+
+    }
+
+}
 
 document.addEventListener(
     "click",
@@ -771,19 +1230,156 @@ elements.checkoutButton.addEventListener(
     checkout
 );
 
+// ---------------------------------------------------------
+// AUTHENTICATION NAVIGATION
+// ---------------------------------------------------------
+
+elements.loginNavButton.addEventListener(
+    "click",
+    () => openAuthenticationDialog("login")
+);
+
+
+elements.registerNavButton.addEventListener(
+    "click",
+    () => openAuthenticationDialog("register")
+);
+
+
+elements.logoutButton.addEventListener(
+    "click",
+    logoutUser
+);
+
+
+// ---------------------------------------------------------
+// AUTHENTICATION DIALOG
+// ---------------------------------------------------------
+
+elements.closeAuthButton.addEventListener(
+    "click",
+    closeAuthenticationDialog
+);
+
+
+elements.loginTabButton.addEventListener(
+    "click",
+    () => setAuthenticationMode("login")
+);
+
+
+elements.registerTabButton.addEventListener(
+    "click",
+    () => setAuthenticationMode("register")
+);
+
+
+// ---------------------------------------------------------
+// LOGIN FORM
+// ---------------------------------------------------------
+
+elements.loginForm.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        setAuthenticationMessage("");
+
+
+        try {
+
+            await loginUser(
+                elements.loginEmail.value.trim(),
+                elements.loginPassword.value
+            );
+
+        }
+        catch (error) {
+
+            setAuthenticationMessage(
+                error.message,
+                true
+            );
+
+        }
+
+    }
+);
+
+
+// ---------------------------------------------------------
+// REGISTRATION FORM
+// ---------------------------------------------------------
+
+elements.registerForm.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        setAuthenticationMessage("");
+
+
+        try {
+
+            await registerUser(
+                elements.registerEmail.value.trim(),
+                elements.registerPassword.value,
+                elements.confirmPassword.value
+            );
+
+        }
+        catch (error) {
+
+            setAuthenticationMessage(
+                error.message,
+                true
+            );
+
+        }
+
+    }
+);
+
 
 
 async function initializeApplication() {
 
-    await Promise.all([
+    await loadCurrentUser();
 
-        loadMats(),
+    await loadMats();
 
-        loadCart(),
 
-        loadOrders()
+    if (state.currentUser) {
 
-    ]);
+        await Promise.all([
+
+            loadCart(),
+
+            loadOrders()
+
+        ]);
+
+    }
+    else {
+
+        state.cart = {
+            items: [],
+            total: 0
+        };
+
+
+        state.orders = [];
+
+
+        renderCart();
+
+        renderOrders();
+
+    }
 
 }
 

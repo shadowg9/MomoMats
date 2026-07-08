@@ -1,162 +1,270 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MomoMats.Data;
+using MomoMats.Models;
 
 namespace MomoMats.Controllers;
 
+
 [ApiController]
+[Authorize]
 [Route("api/cart")]
 public class CartController : ControllerBase
 {
-    // GET: /api/cart/demo-user
-    [HttpGet("{userId}")]
-    public ActionResult<CartResponse> GetCart(string userId)
+    private readonly MomoMatsDbContext _dbContext;
+
+    private readonly UserManager<ApplicationUser> _userManager;
+
+
+    public CartController(
+        MomoMatsDbContext dbContext,
+        UserManager<ApplicationUser> userManager)
     {
-        lock (DemoStore.SyncRoot)
-        {
-            return Ok(BuildCartResponse(userId));
-        }
+        _dbContext = dbContext;
+
+        _userManager = userManager;
     }
 
 
-    // POST: /api/cart/demo-user/items
-    [HttpPost("{userId}/items")]
-    public ActionResult<CartResponse> AddItem(
-        string userId,
+    // ---------------------------------------------------------
+    // GET CURRENT USER'S CART
+    //
+    // GET: /api/cart
+    // ---------------------------------------------------------
+
+    [HttpGet]
+    public async Task<ActionResult<CartResponse>> GetCart()
+    {
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+
+        CartResponse cart =
+            await BuildCartResponseAsync(userId);
+
+
+        return Ok(cart);
+    }
+
+
+    // ---------------------------------------------------------
+    // ADD ITEM TO CART
+    //
+    // POST: /api/cart/items
+    // ---------------------------------------------------------
+
+    [HttpPost("items")]
+    public async Task<ActionResult<CartResponse>> AddItem(
         AddCartItemRequest request)
     {
-        if (request.Quantity < 1 || request.Quantity > 10)
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+
+        if (request.Quantity < 1 ||
+            request.Quantity > 10)
         {
             return BadRequest(new
             {
-                message = "Quantity must be between 1 and 10."
+                message =
+                    "Quantity must be between 1 and 10."
             });
         }
 
 
-        lock (DemoStore.SyncRoot)
+        bool matExists =
+            await _dbContext.Mats
+                .AnyAsync(mat =>
+                    mat.Id == request.MatId);
+
+
+        if (!matExists)
         {
-            MatDto? mat = DemoStore.Mats
-                .FirstOrDefault(mat => mat.Id == request.MatId);
-
-
-            if (mat is null)
+            return NotFound(new
             {
-                return NotFound(new
+                message =
+                    $"Mat with ID {request.MatId} was not found."
+            });
+        }
+
+
+        CartItem? existingItem =
+            await _dbContext.CartItems
+                .FirstOrDefaultAsync(cartItem =>
+                    cartItem.UserId == userId &&
+                    cartItem.MatId == request.MatId);
+
+
+        if (existingItem is null)
+        {
+            var cartItem = new CartItem
+            {
+                UserId = userId,
+
+                MatId = request.MatId,
+
+                Quantity = request.Quantity,
+
+                AddedAt = DateTimeOffset.UtcNow
+            };
+
+
+            _dbContext.CartItems.Add(cartItem);
+        }
+        else
+        {
+            int newQuantity =
+                existingItem.Quantity +
+                request.Quantity;
+
+
+            if (newQuantity > 10)
+            {
+                return BadRequest(new
                 {
                     message =
-                        $"Mat with ID {request.MatId} was not found."
+                        "A cart item cannot have a quantity greater than 10."
                 });
             }
 
 
-            if (!DemoStore.Carts.TryGetValue(userId, out var cart))
-            {
-                cart = [];
-                DemoStore.Carts[userId] = cart;
-            }
-
-
-            CartLine? existingItem = cart
-                .FirstOrDefault(
-                    item => item.MatId == request.MatId);
-
-
-            if (existingItem is null)
-            {
-                cart.Add(new CartLine
-                {
-                    MatId = request.MatId,
-                    Quantity = request.Quantity
-                });
-            }
-            else
-            {
-                existingItem.Quantity = Math.Min(
-                    existingItem.Quantity + request.Quantity,
-                    10);
-            }
-
-
-            return Ok(BuildCartResponse(userId));
+            existingItem.Quantity =
+                newQuantity;
         }
+
+
+        await _dbContext.SaveChangesAsync();
+
+
+        CartResponse cart =
+            await BuildCartResponseAsync(userId);
+
+
+        return Ok(cart);
     }
 
 
-    // DELETE: /api/cart/demo-user/items/1
-    [HttpDelete("{userId}/items/{matId:int}")]
-    public ActionResult<CartResponse> RemoveItem(
-        string userId,
+    // ---------------------------------------------------------
+    // REMOVE ITEM FROM CART
+    //
+    // DELETE: /api/cart/items/1
+    // ---------------------------------------------------------
+
+    [HttpDelete("items/{matId:int}")]
+    public async Task<ActionResult<CartResponse>> RemoveItem(
         int matId)
     {
-        lock (DemoStore.SyncRoot)
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            if (DemoStore.Carts.TryGetValue(userId, out var cart))
-            {
-                CartLine? item = cart
-                    .FirstOrDefault(
-                        item => item.MatId == matId);
-
-
-                if (item is not null)
-                {
-                    cart.Remove(item);
-                }
-            }
-
-
-            return Ok(BuildCartResponse(userId));
+            return Unauthorized();
         }
+
+
+        CartItem? cartItem =
+            await _dbContext.CartItems
+                .FirstOrDefaultAsync(item =>
+                    item.UserId == userId &&
+                    item.MatId == matId);
+
+
+        if (cartItem is null)
+        {
+            return NotFound(new
+            {
+                message =
+                    "The requested mat was not found in your cart."
+            });
+        }
+
+
+        _dbContext.CartItems.Remove(cartItem);
+
+
+        await _dbContext.SaveChangesAsync();
+
+
+        CartResponse cart =
+            await BuildCartResponseAsync(userId);
+
+
+        return Ok(cart);
     }
 
 
-    internal static CartResponse BuildCartResponse(string userId)
+    // ---------------------------------------------------------
+    // BUILD CART RESPONSE
+    // ---------------------------------------------------------
+
+    private async Task<CartResponse> BuildCartResponseAsync(
+        string userId)
     {
-        if (!DemoStore.Carts.TryGetValue(userId, out var cart))
-        {
-            cart = [];
-        }
+        List<CartItemResponse> items =
+            await _dbContext.CartItems
+                .AsNoTracking()
+                .Where(cartItem =>
+                    cartItem.UserId == userId)
+                .OrderBy(cartItem =>
+                    cartItem.AddedAt)
+                .Select(cartItem =>
+                    new CartItemResponse
+                    {
+                        MatId =
+                            cartItem.MatId,
 
+                        Name =
+                            cartItem.Mat.Name,
 
-        var items = cart
-            .Select(cartLine =>
-            {
-                MatDto? mat = DemoStore.Mats
-                    .FirstOrDefault(
-                        mat => mat.Id == cartLine.MatId);
+                        Provider =
+                            cartItem.Mat.Provider,
 
+                        Quantity =
+                            cartItem.Quantity,
 
-                if (mat is null)
-                {
-                    return null;
-                }
+                        UnitPrice =
+                            cartItem.Mat.Price,
 
+                        LineTotal =
+                            cartItem.Mat.Price *
+                            cartItem.Quantity,
 
-                return new CartItemResponse
-                {
-                    MatId = mat.Id,
-                    Name = mat.Name,
-                    Provider = mat.Provider,
-                    Price = mat.Price,
-                    Quantity = cartLine.Quantity
-                };
-            })
-            .Where(item => item is not null)
-            .Cast<CartItemResponse>()
-            .ToList();
+                        ImageUrl =
+                            cartItem.Mat.ImageUrl
+                    })
+                .ToListAsync();
 
 
         return new CartResponse
         {
-            UserId = userId,
             Items = items,
 
-            Total = items.Sum(
-                item =>
-                    item.Price *
-                    item.Quantity)
+            Total = items.Sum(item =>
+                item.LineTotal)
         };
     }
 }
 
+
+// ---------------------------------------------------------
+// REQUEST / RESPONSE TYPES
+// ---------------------------------------------------------
 
 public sealed class AddCartItemRequest
 {
@@ -166,11 +274,12 @@ public sealed class AddCartItemRequest
 }
 
 
-public sealed class CartLine
+public sealed class CartResponse
 {
-    public int MatId { get; set; }
+    public List<CartItemResponse> Items { get; set; }
+        = new();
 
-    public int Quantity { get; set; }
+    public decimal Total { get; set; }
 }
 
 
@@ -178,24 +287,17 @@ public sealed class CartItemResponse
 {
     public int MatId { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; set; }
+        = string.Empty;
 
-    public string Provider { get; set; } = string.Empty;
-
-    public decimal Price { get; set; }
+    public string Provider { get; set; }
+        = string.Empty;
 
     public int Quantity { get; set; }
 
-    public decimal LineTotal =>
-        Price * Quantity;
-}
+    public decimal UnitPrice { get; set; }
 
+    public decimal LineTotal { get; set; }
 
-public sealed class CartResponse
-{
-    public string UserId { get; set; } = string.Empty;
-
-    public List<CartItemResponse> Items { get; set; } = [];
-
-    public decimal Total { get; set; }
+    public string? ImageUrl { get; set; }
 }

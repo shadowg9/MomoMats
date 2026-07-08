@@ -1,171 +1,327 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MomoMats.Data;
+using MomoMats.Models;
 
 namespace MomoMats.Controllers;
 
+
 [ApiController]
+[Authorize]
 [Route("api/orders")]
 public class OrdersController : ControllerBase
 {
-    // GET: /api/orders/demo-user
-    [HttpGet("{userId}")]
-    public ActionResult<IEnumerable<OrderDto>> GetOrders(
-        string userId)
+    private readonly MomoMatsDbContext _dbContext;
+
+    private readonly UserManager<ApplicationUser> _userManager;
+
+
+    public OrdersController(
+        MomoMatsDbContext dbContext,
+        UserManager<ApplicationUser> userManager)
     {
-        lock (DemoStore.SyncRoot)
+        _dbContext = dbContext;
+
+        _userManager = userManager;
+    }
+
+
+    // ---------------------------------------------------------
+    // GET CURRENT USER'S ORDERS
+    //
+    // GET: /api/orders
+    // ---------------------------------------------------------
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<OrderResponse>>>
+        GetOrders()
+    {
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            var orders = DemoStore.Orders
+            return Unauthorized();
+        }
+
+
+        List<Order> orders =
+            await _dbContext.Orders
+                .AsNoTracking()
+                .Include(order =>
+                    order.OrderItems)
                 .Where(order =>
-                    order.UserId.Equals(
-                        userId,
-                        StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(
-                    order => order.CreatedAt)
+                    order.UserId == userId)
+                .OrderByDescending(order =>
+                    order.CreatedAt)
+                .ToListAsync();
+
+
+        List<OrderResponse> response =
+            orders
+                .Select(MapOrderResponse)
                 .ToList();
 
 
-            return Ok(orders);
-        }
+        return Ok(response);
     }
 
 
-    // GET: /api/orders/demo-user/1
-    [HttpGet("{userId}/{id:int}")]
-    public ActionResult<OrderDto> GetOrder(
-        string userId,
-        int id)
+    // ---------------------------------------------------------
+    // GET ONE ORDER
+    //
+    // GET: /api/orders/1
+    // ---------------------------------------------------------
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<OrderResponse>>
+        GetOrderById(int id)
     {
-        lock (DemoStore.SyncRoot)
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            OrderDto? order = DemoStore.Orders
-                .FirstOrDefault(order =>
-                    order.Id == id &&
-                    order.UserId.Equals(
-                        userId,
-                        StringComparison.OrdinalIgnoreCase));
-
-
-            if (order is null)
-            {
-                return NotFound(new
-                {
-                    message = $"Order {id} was not found."
-                });
-            }
-
-
-            return Ok(order);
+            return Unauthorized();
         }
+
+
+        Order? order =
+            await _dbContext.Orders
+                .AsNoTracking()
+                .Include(existingOrder =>
+                    existingOrder.OrderItems)
+                .FirstOrDefaultAsync(existingOrder =>
+                    existingOrder.Id == id &&
+                    existingOrder.UserId == userId);
+
+
+        if (order is null)
+        {
+            return NotFound(new
+            {
+                message =
+                    $"Order with ID {id} was not found."
+            });
+        }
+
+
+        return Ok(
+            MapOrderResponse(order)
+        );
     }
 
 
-    // POST: /api/orders/demo-user
-    [HttpPost("{userId}")]
-    public ActionResult<OrderDto> Checkout(string userId)
+    // ---------------------------------------------------------
+    // CHECKOUT / CREATE ORDER
+    //
+    // POST: /api/orders
+    // ---------------------------------------------------------
+
+    [HttpPost]
+    public async Task<ActionResult<OrderResponse>>
+        CreateOrder()
     {
-        lock (DemoStore.SyncRoot)
+        string? userId =
+            _userManager.GetUserId(User);
+
+
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            if (!DemoStore.Carts.TryGetValue(userId, out var cart) ||
-                cart.Count == 0)
+            return Unauthorized();
+        }
+
+
+        List<CartItem> cartItems =
+            await _dbContext.CartItems
+                .Include(cartItem =>
+                    cartItem.Mat)
+                .Where(cartItem =>
+                    cartItem.UserId == userId)
+                .ToListAsync();
+
+
+        if (cartItems.Count == 0)
+        {
+            return BadRequest(new
             {
-                return BadRequest(new
-                {
-                    message = "Your cart is empty."
-                });
-            }
+                message =
+                    "Your cart is empty."
+            });
+        }
 
 
-            var orderItems = new List<OrderItemDto>();
+        decimal totalAmount =
+            cartItems.Sum(cartItem =>
+                cartItem.Mat.Price *
+                cartItem.Quantity);
 
 
-            foreach (CartLine cartLine in cart)
+        await using var transaction =
+            await _dbContext.Database
+                .BeginTransactionAsync();
+
+
+        try
+        {
+            var order = new Order
             {
-                MatDto? mat = DemoStore.Mats
-                    .FirstOrDefault(
-                        mat => mat.Id == cartLine.MatId);
-
-
-                if (mat is null)
-                {
-                    continue;
-                }
-
-
-                orderItems.Add(new OrderItemDto
-                {
-                    MatId = mat.Id,
-                    MatName = mat.Name,
-                    Provider = mat.Provider,
-                    Quantity = cartLine.Quantity,
-                    UnitPrice = mat.Price
-                });
-            }
-
-
-            var order = new OrderDto
-            {
-                Id = DemoStore.NextOrderId(),
-
                 UserId = userId,
 
-                CreatedAt = DateTimeOffset.UtcNow,
+                CreatedAt =
+                    DateTimeOffset.UtcNow,
 
-                Status = "Order Placed",
+                Status = "Placed",
 
-                Items = orderItems,
+                TotalAmount = totalAmount,
 
-                Total = orderItems.Sum(
-                    item =>
-                        item.UnitPrice *
-                        item.Quantity)
+                OrderItems =
+                    cartItems
+                        .Select(cartItem =>
+                            new OrderItem
+                            {
+                                MatId =
+                                    cartItem.MatId,
+
+                                MatName =
+                                    cartItem.Mat.Name,
+
+                                Provider =
+                                    cartItem.Mat.Provider,
+
+                                Quantity =
+                                    cartItem.Quantity,
+
+                                UnitPrice =
+                                    cartItem.Mat.Price
+                            })
+                        .ToList()
             };
 
 
-            DemoStore.Orders.Add(order);
+            _dbContext.Orders.Add(order);
 
-            DemoStore.Carts[userId] = [];
+
+            _dbContext.CartItems
+                .RemoveRange(cartItems);
+
+
+            await _dbContext
+                .SaveChangesAsync();
+
+
+            await transaction
+                .CommitAsync();
 
 
             return CreatedAtAction(
-                nameof(GetOrder),
+                nameof(GetOrderById),
+
                 new
                 {
-                    userId,
                     id = order.Id
                 },
-                order);
+
+                MapOrderResponse(order)
+            );
         }
+        catch
+        {
+            await transaction
+                .RollbackAsync();
+
+            throw;
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // MAP DATABASE ORDER TO API RESPONSE
+    // ---------------------------------------------------------
+
+    private static OrderResponse MapOrderResponse(
+        Order order)
+    {
+        return new OrderResponse
+        {
+            Id = order.Id,
+
+            CreatedAt =
+                order.CreatedAt,
+
+            Status =
+                order.Status,
+
+            Total =
+                order.TotalAmount,
+
+            Items =
+                order.OrderItems
+                    .Select(orderItem =>
+                        new OrderItemResponse
+                        {
+                            MatId =
+                                orderItem.MatId,
+
+                            MatName =
+                                orderItem.MatName,
+
+                            Provider =
+                                orderItem.Provider,
+
+                            Quantity =
+                                orderItem.Quantity,
+
+                            UnitPrice =
+                                orderItem.UnitPrice,
+
+                            LineTotal =
+                                orderItem.UnitPrice *
+                                orderItem.Quantity
+                        })
+                    .ToList()
+        };
     }
 }
 
 
-public sealed class OrderDto
+// ---------------------------------------------------------
+// RESPONSE TYPES
+// ---------------------------------------------------------
+
+public sealed class OrderResponse
 {
     public int Id { get; set; }
 
-    public string UserId { get; set; } = string.Empty;
-
     public DateTimeOffset CreatedAt { get; set; }
 
-    public string Status { get; set; } = string.Empty;
-
-    public List<OrderItemDto> Items { get; set; } = [];
+    public string Status { get; set; }
+        = string.Empty;
 
     public decimal Total { get; set; }
+
+    public List<OrderItemResponse> Items { get; set; }
+        = new();
 }
 
 
-public sealed class OrderItemDto
+public sealed class OrderItemResponse
 {
     public int MatId { get; set; }
 
-    public string MatName { get; set; } = string.Empty;
+    public string MatName { get; set; }
+        = string.Empty;
 
-    public string Provider { get; set; } = string.Empty;
+    public string Provider { get; set; }
+        = string.Empty;
 
     public int Quantity { get; set; }
 
     public decimal UnitPrice { get; set; }
 
-    public decimal LineTotal =>
-        UnitPrice * Quantity;
+    public decimal LineTotal { get; set; }
 }
