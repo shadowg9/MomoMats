@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>MomoMats | AI-Designed Door Mats</title>
+
+    <link rel="stylesheet"
+          href="styles.css">
+
+</head>
+
+
+<body>
+
+
+    <header class="site-header">
+
+        <a class="brand" href="#">
+            <span class="brand-logo">M</span>
+            <span>MomoMats</span>
+        </a>
+
+
+        <nav>
+
+            <a href="#openai">OpenAI Mats</a>
+
+            <a href="#gemini">Gemini Mats</a>
+
+            <a href="#orders">Orders</a>
+
+
+            <button id="cartButton"
+                    class="cart-button"
+                    type="button">
+
+                Cart
+
+                <span id="cartCount">0</span>
+
+            </button>
+
+        </nav>
+
+    </header>
+
+
+
+    <main>
+
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <p class="eyebrow">
+                    AI-DESIGNED DOOR MATS
+                </p>
+
+
+                <h1>
+                    Your doorstep deserves
+                    <span>better ideas.</span>
+                </h1>
+
+
+                <p>
+                    Shop unique mat concepts created through
+                    OpenAI and Google Gemini-powered design workflows.
+                </p>
+
+
+                <a href="#openai"
+                   class="primary-button">
+
+                    Explore the Collection
+
+                </a>
+
+            </div>
+
+
+            <div class="hero-visual">
+
+                <div class="door">
+
+                    <div class="window"></div>
+
+                    <div class="handle"></div>
+
+                </div>
+
+
+                <div class="hero-mat">
+                    WELCOME
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <section class="provider-summary">
+
+            <article class="provider-box openai-box">
+
+                <span class="provider-number">01</span>
+
+                <div>
+                    <h3>OpenAI Collection</h3>
+
+                    <p>
+                        Five imaginative mat concepts created
+                        through the OpenAI design pipeline.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <article class="provider-box gemini-box">
+
+                <span class="provider-number">02</span>
+
+                <div>
+                    <h3>Gemini Collection</h3>
+
+                    <p>
+                        Five distinctive concepts created
+                        through Google's Gemini design pipeline.
+                    </p>
+                </div>
+
+            </article>
+
+        </section>
+
+
+
+        <section id="openai"
+                 class="collection-section">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="eyebrow">
+                        OPENAI COLLECTION
+                    </p>
+
+                    <h2>
+                        Designed with OpenAI
+                    </h2>
+
+                </div>
+
+                <span class="collection-count">
+                    5 Designs
+                </span>
+
+            </div>
+
+
+            <div id="openAiGrid"
+                 class="mat-grid">
+            </div>
+
+        </section>
+
+
+
+        <section id="gemini"
+                 class="collection-section alternate">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="eyebrow gemini-text">
+                        GEMINI COLLECTION
+                    </p>
+
+                    <h2>
+                        Designed with Gemini
+                    </h2>
+
+                </div>
+
+                <span class="collection-count">
+                    5 Designs
+                </span>
+
+            </div>
+
+
+            <div id="geminiGrid"
+                 class="mat-grid">
+            </div>
+
+        </section>
+
+
+
+        <section id="orders"
+                 class="orders-section">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="eyebrow">
+                        PURCHASE HISTORY
+                    </p>
+
+                    <h2>Your Orders</h2>
+
+                </div>
+
+            </div>
+
+
+            <div id="ordersList"></div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <aside id="cartPanel"
+           class="cart-panel"
+           aria-hidden="true">
+
+
+        <div class="cart-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    YOUR CART
+                </p>
+
+                <h2>Shopping Cart</h2>
+
+            </div>
+
+
+            <button id="closeCartButton"
+                    class="close-button"
+                    type="button">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <div id="cartItems"
+             class="cart-items">
+        </div>
+
+
+        <div class="cart-footer">
+
+            <div class="cart-total">
+
+                <span>Total</span>
+
+                <strong id="cartTotal">
+                    $0.00
+                </strong>
+
+            </div>
+
+
+            <button id="checkoutButton"
+                    class="primary-button checkout-button"
+                    type="button">
+
+                Place Mock Order
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <div id="overlay"
+         class="overlay">
+    </div>
+
+
+
+    <footer>
+
+        <strong>MomoMats</strong>
+
+        <p>
+            ASP.NET Core · Docker · Terraform · Kubernetes · AWS
+        </p>
+
+    </footer>
+
+
+
+    <div id="notification"
+         class="notification">
+    </div>
+
+
+
+    <script src="app.js"></script>
+
+
+</body>
+
+</html>
