@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MomoMats.Data;
 using MomoMats.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -47,6 +48,8 @@ builder.Services.AddAuthorization();
 builder.Services
     .AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<MomoMatsDbContext>();
+
+
 
 
 // ---------------------------------------------------------
