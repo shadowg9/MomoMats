@@ -28,7 +28,7 @@ resource "aws_security_group" "eks_additional_sg" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  version = "21.24.0"
 
   name               = "momomats-eks-cluster"
   kubernetes_version = "1.34"
@@ -44,11 +44,11 @@ module "eks" {
     }
   }
 
-  endpoint_public_access = false
+  endpoint_public_access                   = false
   enable_cluster_creator_admin_permissions = true
 
   vpc_id                        = module.vpc.vpc_id
-  subnet_ids                   = module.vpc.private_subnets
+  subnet_ids                    = module.vpc.private_subnets
   additional_security_group_ids = [aws_security_group.eks_additional_sg.id]
 
   eks_managed_node_groups = {

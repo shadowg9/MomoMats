@@ -399,3 +399,33 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local Docker environment variables
+.env.docker.local
+
+# =========================================================
+# TERRAFORM
+# =========================================================
+
+# Terraform working directories and downloaded providers
+**/.terraform/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files
+*.tfplan
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Local override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local Docker runtime configuration
+.env.docker.local

@@ -45,7 +45,8 @@ resource "aws_security_group" "bastion_sg" {
 }
 
 module "bastion_host" {
-  source = "terraform-aws-modules/ec2-instance/aws"
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  version = "6.4.0"
 
   name          = "momomats-bastion-host"
   ami           = data.aws_ami.ubuntu.id
