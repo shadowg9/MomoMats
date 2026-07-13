@@ -1,6 +1,12 @@
 terraform {
   required_version = ">= 1.5.7, < 2.0.0"
 
+  backend "s3" {
+    bucket = "momomats-terraform-backend-bucket2026"
+    key    = "s3-backend"
+    region = "us-east-1"
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
