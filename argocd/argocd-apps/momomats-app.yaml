@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: momomats-app
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/shadowg9/MomoMats.git
+    targetRevision: main
+    path: kubernetes-manifests
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: momomats
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true
