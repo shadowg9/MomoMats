@@ -2619,7 +2619,7 @@ server:
   # Refer to https://gateway-api.sigs.k8s.io/implementations/ for controller-specific details
   httproute:
     # -- Enable HTTPRoute resource for Argo CD server (Gateway API)
-    enabled: false
+    enabled: true
     # -- Additional HTTPRoute labels
     labels: {}
     # -- Additional HTTPRoute annotations
@@ -2634,7 +2634,7 @@ server:
     # -- List of hostnames for the HTTPRoute
     # @default -- `[]` (See [values.yaml])
     hostnames:
-      - argocd.devopsmomo.link
+      - argocd.devopsmomo.online
     # -- HTTPRoute rules configuration
     # @default -- `[]` (See [values.yaml])
     rules:

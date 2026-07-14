@@ -8,5 +8,5 @@ spec:
   scheme: internet-facing
   listenerConfigurations:
     - protocolPort: HTTPS:443
-      defaultCertificate:
+      defaultCertificate: arn:aws:acm:us-east-1:581047399546:certificate/b77360a9-b438-45c6-9dca-a84f2588d622
  
