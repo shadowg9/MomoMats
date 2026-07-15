@@ -1,0 +1,32 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: momomats-image-updater
+  namespace: argocd
+spec:
+  # Persist the selected image version in Git so Git remains the
+  # source of truth for the desired state.
+  writeBackConfig:
+    method: "git:secret:argocd/image-updater-git-creds"
+    gitConfig:
+      repository: "https://github.com/shadowg9/MomoMats.git"
+      branch: "main"
+      writeBackTarget: "kustomization"
+
+  applicationRefs:
+    - namePattern: "momomats-app"
+      images:
+        - alias: "momomats"
+          imageName: "ghcr.io/shadowg9/momomats"
+
+          # GitHub Actions publishes immutable tags that are the raw,
+          # 40-character Git commit SHA.
+          commonUpdateSettings:
+            updateStrategy: "newest-build"
+            allowTags: "regexp:^[a-f0-9]{40}$"
+
+          # The Deployment uses the placeholder image name
+          # `momomats-image`, which Kustomize replaces.
+          manifestTargets:
+            kustomize:
+              name: "momomats-image"
