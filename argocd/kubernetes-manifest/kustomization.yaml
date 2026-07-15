@@ -5,8 +5,10 @@ namespace: momomats
 
 resources:
   - momomats.yaml
+  - momomats-httproute.yaml
+  - momomats-target-group.yaml
 
 images:
   - name: momomats-image
-    newName: REPLACE_WITH_YOUR_CONTAINER_REGISTRY/MOMOMATS_IMAGE
-    newTag: REPLACE_WITH_YOUR_IMAGE_TAG
+    newName: ghcr.io/shadowg9/momomats
+    newTag: sha-c621ed8ccce9ed6917b198adc40a66387e0204ec

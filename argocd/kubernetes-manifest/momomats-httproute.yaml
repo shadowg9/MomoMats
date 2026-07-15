@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: momomats-route
+  namespace: momomats
+spec:
+  hostnames:
+    - dotnetmats.devopsmomo.online
+
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: app-alb-gateway
+      namespace: default
+      sectionName: https
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: momomats-service
+          port: 80
+          weight: 1
