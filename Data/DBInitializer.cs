@@ -6,6 +6,8 @@ namespace MomoMats.Data;
 
 public static class DbInitializer
 {
+    private static string https;
+
     public static async Task SeedAsync(
         MomoMatsDbContext dbContext)
     {
@@ -33,7 +35,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a rectangular decorative doormat inspired by deep space, colorful nebula clouds, glowing stars, and a premium woven texture.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Cosmic_Welcome.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Cosmic_Welcome.png",
 
                 Price = 29.99m,
 
@@ -52,7 +54,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a futuristic cyberpunk doormat featuring glowing neon circuit-board patterns, dark tones, and bright technological accents.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Neon_Circuit.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Neon_Circuit.png",
 
                 Price = 34.99m,
 
@@ -71,7 +73,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a decorative doormat featuring layered mountain silhouettes and an abstract colorful sunrise with a calm minimalist aesthetic.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Mountain_Sunrise.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Mountain_Sunrise.png",
 
                 Price = 31.99m,
 
@@ -90,7 +92,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a colorful pixel-art doormat inspired by classic 1980s arcade games, neon signs, pixels, and retro gaming aesthetics.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Retro_Arcade.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Retro_Arcade.png",
 
                 Price = 32.99m,
 
@@ -109,7 +111,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create an elegant dark botanical doormat with glowing flowers, moonlit leaves, subtle blue and purple tones, and intricate natural patterns.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Midnight_Garden.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/ChatGPT_Midnight_Garden.png",
 
                 Price = 35.99m,
 
@@ -133,7 +135,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a modern decorative doormat combining clean geometric shapes with botanical leaves and natural patterns.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/Gemini_Botantical_Geometry.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Botantical_Geometry.png",
 
                 Price = 30.99m,
 
@@ -152,7 +154,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create an abstract ocean-themed doormat using layered blue mosaic patterns, flowing waves, and geometric tile textures.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/Gemini_Ocean_Mosaic.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Ocean_Mosaic.png",
 
                 Price = 33.99m,
 
@@ -171,7 +173,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a minimalist desert doormat design with flowing sand dunes, warm earth tones, and a large setting sun on the horizon.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/Gemini_Desert_Horizon.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Desert_Horizon.png",
 
                 Price = 29.99m,
 
@@ -190,7 +192,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create an illustrated decorative doormat showing a peaceful forest trail surrounded by rich green foliage and soft natural lighting.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/Gemini_Forest_Path.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Forest_Path.png",
 
                 Price = 34.99m,
 
@@ -209,7 +211,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a contemporary abstract doormat featuring flowing colorful waves inspired by ocean currents and modern graphic design.",
 
-                ImageUrl = https://momomats.s3.us-east-1.amazonaws.com/Gemini_Abstract_Waves.png,
+                ImageUrl = "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Abstract_Waves.png",
 
                 Price = 31.99m,
 
