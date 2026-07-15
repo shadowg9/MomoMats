@@ -88,7 +88,7 @@ public static class DbInitializer
                 GenerationPrompt =
                     "Create a modern decorative doormat combining clean geometric shapes with botanical leaves and natural patterns.",
                 ImageUrl =
-                    "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Botanical_Geometry.png",
+                    "https://momomats.s3.us-east-1.amazonaws.com/Gemini_Botantical_Geometry.png",
                 Price = 30.99m,
                 CreatedAt = DateTimeOffset.UtcNow
             },
