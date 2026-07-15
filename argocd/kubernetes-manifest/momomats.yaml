@@ -25,13 +25,15 @@ spec:
           env:
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
+
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
+
             - name: ConnectionStrings__DefaultConnection
               valueFrom:
-              secretKeyRef:
-                name: momomats-db
-                key: default-connection
+                secretKeyRef:
+                  name: momomats-db
+                  key: default-connection
           resources:
             requests:
               cpu: 100m
