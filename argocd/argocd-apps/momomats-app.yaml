@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/shadowg9/MomoMats.git
     targetRevision: main
-    path: kubernetes-manifest
+    path: argocd/kubernetes-manifest
 
   destination:
     server: https://kubernetes.default.svc
