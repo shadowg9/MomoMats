@@ -58,19 +58,27 @@ builder.Services
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext =
+        scope.ServiceProvider.GetRequiredService<MomoMatsDbContext>();
+
+    await dbContext.Database.MigrateAsync();
+    await DbInitializer.SeedAsync(dbContext);
+}
 
 // ---------------------------------------------------------
 // SEED INITIAL DATABASE DATA
 // ---------------------------------------------------------
 
-using (IServiceScope scope = app.Services.CreateScope())
-{
-    MomoMatsDbContext dbContext =
-        scope.ServiceProvider
-            .GetRequiredService<MomoMatsDbContext>();
+//using (IServiceScope scope = app.Services.CreateScope())
+//{
+//    MomoMatsDbContext dbContext =
+//        scope.ServiceProvider
+//            .GetRequiredService<MomoMatsDbContext>();
 
-    await DbInitializer.SeedAsync(dbContext);
-}
+//    await DbInitializer.SeedAsync(dbContext);
+//}
 
 
 // ---------------------------------------------------------
