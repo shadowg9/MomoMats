@@ -1,14 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: momomats
-
 resources:
   - momomats.yaml
   - momomats-httproute.yaml
   - momomats-target-group.yaml
-
 images:
   - name: momomats-image
     newName: ghcr.io/shadowg9/momomats
-    newTag: b0c3653a4339aa1e22325d85e9e464db9658c6b8
+    newTag: 2e4ed237047d5927aeafda9f8b32817822b9a48c
