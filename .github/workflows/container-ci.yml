@@ -5,6 +5,13 @@ on:
     branches:
       - main
 
+    paths-ignore:
+      - "argocd/**"
+      - "terraform/**"
+      - "external-dns/**"
+      - "gateway-api-manifests/**"
+      - "README.md"
+
   workflow_dispatch:
 
 permissions:
