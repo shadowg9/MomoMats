@@ -8,4 +8,4 @@ resources:
 images:
   - name: momomats-image
     newName: ghcr.io/shadowg9/momomats
-    newTag: 1215de0215e6bf096b995e873f77d44b2ad77ebf
+    newTag: c8d66d209a689f681071f81a58df951b18a4e846
