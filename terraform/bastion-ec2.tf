@@ -49,7 +49,7 @@ module "bastion_host" {
   version = "6.4.0"
 
   name          = "momomats-bastion-host"
-  ami           = data.aws_ami.ubuntu.id
+  ami           = "ami-0d28727121d5d4a3c"
   instance_type = "t3.micro"
   key_name      = aws_key_pair.bastion_keypair.key_name
   monitoring    = true

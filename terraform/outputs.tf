@@ -22,3 +22,18 @@ output "public_subnet_ids" {
   description = "Public subnet IDs used for internet-facing resources and the bastion host"
   value       = module.vpc.public_subnets
 }
+
+output "rds_endpoint" {
+  description = "Private endpoint of the MomoMats RDS MySQL instance"
+  value       = aws_db_instance.momomats.address
+}
+
+output "rds_port" {
+  description = "Port used by the MomoMats RDS MySQL instance"
+  value       = aws_db_instance.momomats.port
+}
+
+output "rds_instance_identifier" {
+  description = "Identifier of the MomoMats RDS instance"
+  value       = aws_db_instance.momomats.identifier
+}
