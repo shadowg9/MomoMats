@@ -1,0 +1,19 @@
+# Example terraform.tfvars values (do NOT put real secrets here)
+location = "eastus"
+name_prefix = "momomats"
+unique_suffix = "dev01"
+app_service_sku_tier = "Basic"
+app_service_sku_size = "B1"
+mysql_administrator_login = "momoadmin"
+mysql_sku_name = "B_Standard_B1ms"
+mysql_version = "8.0.21"
+mysql_storage_gb = 32
+allowed_client_ips = []
+
+# Tags example
+# tags = {
+#   project = "MomoMats"
+#   environment = "dev"
+#   managed-by = "Terraform"
+#   purpose = "portfolio"
+# }
