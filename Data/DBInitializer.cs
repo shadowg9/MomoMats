@@ -150,11 +150,14 @@ public static class DbInitializer
             }
         };
 
+        // Load existing database rows so their image URLs and other fields
+        // are updated instead of returning early and leaving stale values.
         var existingMats = await dbContext.Mats.ToListAsync();
         var existingByName = existingMats.ToDictionary(
             mat => mat.Name,
             StringComparer.OrdinalIgnoreCase);
 
+        // Update matching rows; insert only products that do not exist yet.
         foreach (var desiredMat in desiredMats)
         {
             if (existingByName.TryGetValue(desiredMat.Name, out var existingMat))
