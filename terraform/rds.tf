@@ -32,6 +32,14 @@ resource "aws_security_group" "rds" {
     security_groups = [module.eks.node_security_group_id]
   }
 
+  ingress {
+    description     = "MySQL access from bastion host"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+
   egress {
     description = "Allow outbound traffic"
     from_port   = 0
